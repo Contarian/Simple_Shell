@@ -1,7 +1,7 @@
 #include "shell.h"
 
 /**
- * main - the inpunt point.
+ * main - the inpunt point
  * @ac: arg count.
  * @av: arg vector.
  *
@@ -37,3 +37,8 @@ int main(int ac, char **av)
                 }
                 info->readfd = fd;
         }
+	populate_env_list(info);
+        read_history(info);
+        hsh(info, av);
+        return (EXIT_SUCCESS);
+}	
