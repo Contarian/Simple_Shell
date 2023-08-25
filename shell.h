@@ -1,8 +1,7 @@
-#define SHELL_H
-#ifndef SHELL_H
 #ifndef _SHELL_H_
-#define _SHELL_H_ 
+#define _SHELL_H_
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -12,28 +11,17 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <unistd.h>
-#include <errno.h>
-#include <dirent.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <stdio.h>
+
+/* for read/write buffers */
+#define READ_BUF_SIZE 1024
+#define WRITE_BUF_SIZE 1024
+#define BUF_FLUSH -1
 
 /* for command chaining */
 #define CMD_NORM	0
 #define CMD_OR		1
 #define CMD_AND		2
 #define CMD_CHAIN	3
-
-/*constants*/
-#define EXTERNAL_COMMAND 1
-#define INTERNAL_COMMAND 2
-#define PATH_COMMAND 3
-#define INVALID_COMMAND -1
-/* for read/write buffers */
-#define READ_BUF_SIZE 1024
-#define WRITE_BUF_SIZE 1024
-#define BUF_FLUSH -1
 
 /* for convert_number() */
 #define CONVERT_LOWERCASE	1
@@ -48,16 +36,11 @@
 
 extern char **environ;
 
-#define min(x, y) (((x) < (y)) ? (x) : (y))
 
 /**
- *struct map - the struct that maps a command name to a function 
- *
- *@command_name: command name
- *@func: function that executes the command
  * struct liststr - singly linked list
- * @num: the num field
- * @str: string
+ * @num: the number field
+ * @str: a string
  * @next: points to the next node
  */
 typedef struct liststr
@@ -67,20 +50,19 @@ typedef struct liststr
 	struct liststr *next;
 } list_t;
 
-typedef struct map
 /**
  * struct passinfo - contains pseudo-arguements to pass into a function,
  * allowing uniform prototype for function pointer struct
  * @arg: a string generated from getline containing arguements
  * @argv:an array of strings generated from arg
- * @path: string path for the current command
- * @argc: an arg count
+ * @path: a string path for the current command
+ * @argc: the argument count
  * @line_count: the error count
  * @err_num: the error code for exit()s
  * @linecount_flag: if on count this line of input
  * @fname: the program filename
  * @env: linked list local copy of environ
- * @environ: modified custom copy of environ from LL env
+ * @environ: custom modified copy of environ from LL env
  * @history: the history node
  * @alias: the alias node
  * @env_changed: on if environ was changed
@@ -92,9 +74,6 @@ typedef struct map
  */
 typedef struct passinfo
 {
-	char *command_name;
-	void (*func)(char **command);
-} function_map;
 	char *arg;
 	char **argv;
 	char *path;
@@ -131,20 +110,7 @@ typedef struct builtin
 	int (*func)(info_t *);
 } builtin_table;
 
-extern char **environ;
-extern char *line;
-extern char **commands;
-extern char *shell_name;
-extern int status;
 
-/*helpers*/
-void print(char *, int);
-char **tokenizer(char *, char *);
-void remove_newline(char *);
-int _strlen(char *);
-void _strcpy(char *, char *);
-
-/*helpers2*/
 /* toem_shloop.c */
 int hsh(info_t *, char **);
 int find_builtin(info_t *);
@@ -170,8 +136,6 @@ int _strlen(char *);
 int _strcmp(char *, char *);
 char *starts_with(const char *, const char *);
 char *_strcat(char *, char *);
-int _strspn(char *, char *);
-int _strcspn(char *, char *);
 
 /* toem_string1.c */
 char *_strcpy(char *, char *);
@@ -184,8 +148,6 @@ char *_strncpy(char *, char *, int);
 char *_strncat(char *, char *, int);
 char *_strchr(char *, char);
 
-/*helpers3*/
-char *_strtok_r(char *, char *, char **);
 /* toem_tokenizer.c */
 char **strtow(char *, char *);
 char **strtow2(char *, char);
@@ -203,26 +165,6 @@ int interactive(info_t *);
 int is_delim(char, char *);
 int _isalpha(int);
 int _atoi(char *);
-void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
-void ctrl_c_handler(int);
-void remove_comment(char *);
-
-/*utils*/
-int parse_command(char *);
-void execute_command(char **, int);
-char *check_path(char *);
-void (*get_func(char *))(char **);
-char *_getenv(char *);
-
-/*built_in*/
-void env(char **);
-void quit(char **);
-
-/*main*/
-extern void non_interactive(void);
-extern void initializer(char **current_command, int type_command);
-
-#endif /*SHELL_H*/
 
 /* toem_errors1.c */
 int _erratoi(char *);
@@ -244,6 +186,13 @@ int _myalias(info_t *);
 ssize_t get_input(info_t *);
 int _getline(info_t *, char **, size_t *);
 void sigintHandler(int);
+
+/* toem_vars.c */
+int is_chain(info_t *, char *, size_t *);
+void check_chain(info_t *, char *, size_t *, size_t, size_t);
+int replace_alias(info_t *);
+int replace_vars(info_t *);
+int replace_string(char **, char *);
 
 /* toem_getinfo.c */
 void clear_info(info_t *);
@@ -282,12 +231,5 @@ char **list_to_strings(list_t *);
 size_t print_list(const list_t *);
 list_t *node_starts_with(list_t *, char *, char);
 ssize_t get_node_index(list_t *, list_t *);
-
-/* toem_vars.c */
-int is_chain(info_t *, char *, size_t *);
-void check_chain(info_t *, char *, size_t *, size_t, size_t);
-int replace_alias(info_t *);
-int replace_vars(info_t *);
-int replace_string(char **, char *);
 
 #endif
